@@ -14,10 +14,49 @@ import {
 const VERDE = '#20B77A';
 
 const tipos = [
-  { label: 'Reclamação', icon: '⚠️' },
-  { label: 'Sugestão', icon: '💡' },
-  { label: 'Elogio', icon: '❤️' },
-  { label: 'Denúncia', icon: '🛡️' },
+  { label: 'Reclamação' },
+  { label: 'Sugestão' },
+  { label: 'Elogio' },
+];
+
+const categoriasReclamacao = [
+  'Ar condicionado quebrado',
+  'Computador quebrado',
+  'Projetor com defeito',
+  'Lâmpada queimada',
+  'Cadeira danificada',
+  'Mesa danificada',
+  'Problema de limpeza',
+  'Problema elétrico',
+  'Problema hidráulico',
+  'Outro',
+];
+
+const locais = [
+  'Laboratório 1',
+  'Laboratório 2',
+  'Laboratório 3',
+  'Laboratório 4',
+  'Laboratório 5',
+  'Laboratório 6',
+  'Laboratório 7',
+  'Laboratório 8',
+  'Sala D1',
+  'Sala D2',
+  'Sala D3',
+  'Sala D4',
+  'Sala D5',
+  'Sala D6',
+  'Sala D7',
+  'Sala D8',
+  'Sala D9',
+  'Sala D10',
+  'Sala D11',
+  'Sala D12',
+  'Sala D13',
+  'Sala D14',
+  'Sala D15',
+  'Sala D16',
 ];
 
 export default function NovaManifestacaoScreen({ navigation }) {
@@ -25,6 +64,10 @@ export default function NovaManifestacaoScreen({ navigation }) {
   const [tipo, setTipo] = useState('Reclamação');
   const [descricao, setDescricao] = useState('');
   const [anonima, setAnonima] = useState(false);
+  const [categoria, setCategoria] = useState('');
+  const [local, setLocal] = useState('');
+  const [categoriaAberta, setCategoriaAberta] = useState(false);
+  const [localAberto, setLocalAberto] = useState(false);
 
   function enviarManifestacao() {
     if (!titulo.trim() || !descricao.trim()) {
@@ -35,13 +78,30 @@ export default function NovaManifestacaoScreen({ navigation }) {
       return;
     }
 
+    // Gera protocolo único baseado no timestamp
+    const protocolo = `OUV-2026-${String(Date.now()).slice(-6)}`;
+
+    const novaManifestacao = {
+      id: protocolo,
+      titulo: titulo.trim(),
+      descricao: descricao.trim(),
+      tipo,
+      categoria: categoria || null,
+      local: local || null,
+      anonima,
+      status: 'Recebida',
+      protocolo,
+    };
+
     Alert.alert(
       'Manifestação registrada!',
-      'Sua manifestação foi validada na tela de demonstração.',
+      'Sua manifestação foi enviada com sucesso.',
       [
         {
           text: 'OK',
-          onPress: () => navigation?.goBack(),
+          onPress: () => {
+            navigation?.navigate('Home', { novaManifestacao });
+          },
         },
       ]
     );
@@ -61,9 +121,7 @@ export default function NovaManifestacaoScreen({ navigation }) {
         </TouchableOpacity>
 
         <View style={styles.headerTexto}>
-          <Text style={styles.headerTitulo}>
-            Nova Manifestação
-          </Text>
+          <Text style={styles.headerTitulo}>Nova Manifestação</Text>
           <Text style={styles.headerSubtitulo}>
             Sua voz ajuda a melhorar nossa escola.
           </Text>
@@ -113,7 +171,6 @@ export default function NovaManifestacaoScreen({ navigation }) {
                   accessibilityRole="radio"
                   accessibilityState={{ selected: selecionado }}
                 >
-                  <Text style={styles.tipoIcone}>{item.icon}</Text>
                   <Text
                     style={[
                       styles.tipoTexto,
@@ -126,6 +183,124 @@ export default function NovaManifestacaoScreen({ navigation }) {
               );
             })}
           </View>
+        </View>
+
+        {/* Dropdown: Categoria da Reclamação (opcional) */}
+        <View style={styles.campo}>
+          <Text style={styles.label}>Categoria da reclamação</Text>
+
+          <TouchableOpacity
+            style={styles.dropdown}
+            onPress={() => setCategoriaAberta(!categoriaAberta)}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={[
+                styles.dropdownTexto,
+                !categoria && styles.dropdownPlaceholder,
+              ]}
+            >
+              {categoria || 'Selecione a categoria'}
+            </Text>
+            <Text style={styles.dropdownSeta}>
+              {categoriaAberta ? '▲' : '▼'}
+            </Text>
+          </TouchableOpacity>
+
+          {categoriaAberta && (
+            <View style={styles.dropdownLista}>
+              {categoriasReclamacao.map((item) => {
+                const selecionado = categoria === item;
+                return (
+                  <TouchableOpacity
+                    key={item}
+                    style={[
+                      styles.dropdownItem,
+                      selecionado && styles.dropdownItemSelecionado,
+                    ]}
+                    onPress={() => {
+                      setCategoria(item);
+                      setCategoriaAberta(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.dropdownItemTexto,
+                        selecionado && styles.dropdownItemTextoSelecionado,
+                      ]}
+                    >
+                      {item}
+                    </Text>
+                    {selecionado && (
+                      <Text style={styles.dropdownCheck}>✓</Text>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+        </View>
+
+        {/* Dropdown: Local (opcional) */}
+        <View style={styles.campo}>
+          <Text style={styles.label}>Local da ocorrência</Text>
+
+          <TouchableOpacity
+            style={styles.dropdown}
+            onPress={() => setLocalAberto(!localAberto)}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={[
+                styles.dropdownTexto,
+                !local && styles.dropdownPlaceholder,
+              ]}
+            >
+              {local || 'Selecione o local'}
+            </Text>
+            <Text style={styles.dropdownSeta}>
+              {localAberto ? '▲' : '▼'}
+            </Text>
+          </TouchableOpacity>
+
+          {localAberto && (
+            <View style={styles.dropdownLista}>
+              <ScrollView
+                style={styles.dropdownScroll}
+                nestedScrollEnabled
+                showsVerticalScrollIndicator={false}
+              >
+                {locais.map((item) => {
+                  const selecionado = local === item;
+                  return (
+                    <TouchableOpacity
+                      key={item}
+                      style={[
+                        styles.dropdownItem,
+                        selecionado && styles.dropdownItemSelecionado,
+                      ]}
+                      onPress={() => {
+                        setLocal(item);
+                        setLocalAberto(false);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.dropdownItemTexto,
+                          selecionado && styles.dropdownItemTextoSelecionado,
+                        ]}
+                      >
+                        {item}
+                      </Text>
+                      {selecionado && (
+                        <Text style={styles.dropdownCheck}>✓</Text>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          )}
         </View>
 
         <View style={styles.campo}>
@@ -143,27 +318,6 @@ export default function NovaManifestacaoScreen({ navigation }) {
           <Text style={styles.contador}>
             {descricao.length}/2000 caracteres
           </Text>
-        </View>
-
-        <View style={styles.anexos}>
-          <Text style={styles.label}>📎 Anexos (opcional)</Text>
-          <Text style={styles.textoAuxiliar}>
-            Adicione imagens ou documentos para complementar seu relato.
-          </Text>
-
-          <TouchableOpacity
-            style={styles.botaoAnexo}
-            onPress={() =>
-              Alert.alert(
-                'Anexos',
-                'Integre um seletor de arquivos para habilitar esta função.'
-              )
-            }
-          >
-            <Text style={styles.botaoAnexoTexto}>
-              ＋ Adicionar arquivo
-            </Text>
-          </TouchableOpacity>
         </View>
 
         <View style={styles.anonimoCard}>
@@ -287,39 +441,102 @@ const styles = StyleSheet.create({
     color: '#202923',
   },
   tiposContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: 'column',
     gap: 10,
   },
   tipoCard: {
-    width: '48%',
-    flexGrow: 1,
-    minHeight: 90,
+    width: '100%',
+    minHeight: 60,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#DDE5DF',
     borderRadius: 12,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 12,
-    gap: 6,
+    justifyContent: 'flex-start',
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    gap: 12,
   },
   tipoSelecionado: {
     backgroundColor: '#E5F7ED',
     borderColor: VERDE,
   },
-  tipoIcone: {
-    fontSize: 22,
-  },
   tipoTexto: {
     color: '#44516A',
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '500',
   },
   tipoTextoSelecionado: {
     color: '#168553',
     fontWeight: 'bold',
   },
+
+  /* ===== Dropdowns ===== */
+  dropdown: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#DDE5DF',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dropdownTexto: {
+    fontSize: 14,
+    color: '#202923',
+    flex: 1,
+  },
+  dropdownPlaceholder: {
+    color: '#97A19A',
+  },
+  dropdownSeta: {
+    fontSize: 12,
+    color: '#168553',
+    marginLeft: 10,
+    fontWeight: 'bold',
+  },
+  dropdownLista: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#DDE5DF',
+    borderRadius: 12,
+    marginTop: 8,
+    overflow: 'hidden',
+    elevation: 2,
+  },
+  dropdownScroll: {
+    maxHeight: 220,
+  },
+  dropdownItem: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F4F1',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dropdownItemSelecionado: {
+    backgroundColor: '#E5F7ED',
+  },
+  dropdownItemTexto: {
+    fontSize: 13,
+    color: '#44516A',
+  },
+  dropdownItemTextoSelecionado: {
+    color: '#168553',
+    fontWeight: 'bold',
+  },
+  dropdownCheck: {
+    color: '#168553',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
+
   textArea: {
     minHeight: 140,
     paddingTop: 14,
@@ -329,27 +546,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     textAlign: 'right',
     marginTop: 6,
-  },
-  anexos: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#E1E8E2',
-  },
-  botaoAnexo: {
-    borderWidth: 1,
-    borderColor: VERDE,
-    borderRadius: 10,
-    padding: 12,
-    alignItems: 'center',
-    marginTop: 14,
-  },
-  botaoAnexoTexto: {
-    color: '#168553',
-    fontWeight: '600',
-    fontSize: 13,
   },
   anonimoCard: {
     flexDirection: 'row',
