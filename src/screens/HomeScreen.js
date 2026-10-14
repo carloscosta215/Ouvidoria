@@ -1,4 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
+import { useEffect, useState } from 'react';
 import {
     ScrollView,
     StyleSheet,
@@ -7,7 +8,50 @@ import {
     View,
 } from 'react-native';
 
-export default function HomeScreen({ navigation }) {
+const VERDE = '#20B77A';
+
+// Mapeia cada status para suas cores
+const statusEstilo = {
+  Recebida: {
+    container: { backgroundColor: '#DCE8FF' },
+    texto: { color: '#3867D6' },
+  },
+  'Em andamento': {
+    container: { backgroundColor: '#F0E1FF' },
+    texto: { color: '#7329C9' },
+  },
+  Concluída: {
+    container: { backgroundColor: '#DDF8E8' },
+    texto: { color: '#16834B' },
+  },
+};
+
+// Mapeia cada tipo para a cor do texto
+const tipoEstilo = {
+  Reclamação: { color: '#FF3B30' },
+  Sugestão: { color: '#315BFF' },
+  Elogio: { color: '#00A651' },
+};
+
+export default function HomeScreen({ navigation, route }) {
+  // Lista começa vazia
+  const [manifestacoes, setManifestacoes] = useState([]);
+
+  useEffect(() => {
+    const nova = route?.params?.novaManifestacao;
+
+    if (nova) {
+      setManifestacoes((prev) => {
+        // Evita duplicação em re-renders
+        if (prev.some((m) => m.id === nova.id)) return prev;
+        return [nova, ...prev];
+      });
+
+      // Limpa o parâmetro para não duplicar
+      navigation.setParams({ novaManifestacao: undefined });
+    }
+  }, [route?.params?.novaManifestacao]);
+
   return (
     <View style={styles.homeContainer}>
       <StatusBar style="light" />
@@ -38,85 +82,59 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.card}>
-          <View style={styles.cardTopo}>
-            <Text style={styles.cardTitulo}>
-              Problemas na Biblioteca
+        {manifestacoes.length === 0 ? (
+          <View style={styles.vazioContainer}>
+            <Text style={styles.vazioTitulo}>
+              Nenhuma manifestação ainda
             </Text>
-
-            <View style={styles.statusAndamento}>
-              <Text style={styles.statusAndamentoTexto}>
-                Em andamento
-              </Text>
-            </View>
-          </View>
-
-          <Text style={styles.cardDescricao}>
-            A biblioteca está com falta de livros de matemática
-            do ensino médio.
-          </Text>
-
-          <View style={styles.cardRodape}>
-            <Text style={styles.tipoReclamacao}>
-              Reclamação
-            </Text>
-            <Text style={styles.protocolo}>
-              OUV-2026-001234
+            <Text style={styles.vazioTexto}>
+              Toque em “＋ Nova Manifestação” para registrar
+              sua primeira manifestação.
             </Text>
           </View>
-        </View>
+        ) : (
+          manifestacoes.map((item) => {
+            const status =
+              statusEstilo[item.status] || statusEstilo['Recebida'];
+            const tipoCor =
+              (tipoEstilo[item.tipo] || tipoEstilo['Reclamação']).color;
 
-        <View style={styles.card}>
-          <View style={styles.cardTopo}>
-            <Text style={styles.cardTitulo}>
-              Sugestão de Horta Escolar
-            </Text>
+            return (
+              <View key={item.id} style={styles.card}>
+                <View style={styles.cardTopo}>
+                  <Text style={styles.cardTitulo}>
+                    {item.titulo}
+                  </Text>
 
-            <View style={styles.statusRecebida}>
-              <Text style={styles.statusRecebidaTexto}>
-                Recebida
-              </Text>
-            </View>
-          </View>
+                  <View
+                    style={[styles.statusBase, status.container]}
+                  >
+                    <Text
+                      style={[styles.statusBaseTexto, status.texto]}
+                    >
+                      {item.status}
+                    </Text>
+                  </View>
+                </View>
 
-          <Text style={styles.cardDescricao}>
-            Sugiro a criação de uma horta comunitária para aulas
-            práticas de biologia e conscientização ambiental.
-          </Text>
+                <Text style={styles.cardDescricao}>
+                  {item.descricao}
+                </Text>
 
-          <View style={styles.cardRodape}>
-            <Text style={styles.tipoSugestao}>Sugestão</Text>
-            <Text style={styles.protocolo}>
-              OUV-2026-001235
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.card}>
-          <View style={styles.cardTopo}>
-            <Text style={styles.cardTitulo}>
-              Elogio à Prof. Maria
-            </Text>
-
-            <View style={styles.statusConcluida}>
-              <Text style={styles.statusConcluidaTexto}>
-                Concluída
-              </Text>
-            </View>
-          </View>
-
-          <Text style={styles.cardDescricao}>
-            A professora Maria tem sido excepcional nas aulas de
-            português. Metodologia inovadora e engajadora.
-          </Text>
-
-          <View style={styles.cardRodape}>
-            <Text style={styles.tipoElogio}>Elogio</Text>
-            <Text style={styles.protocolo}>
-              OUV-2026-001236
-            </Text>
-          </View>
-        </View>
+                <View style={styles.cardRodape}>
+                  <Text
+                    style={[styles.tipoTexto, { color: tipoCor }]}
+                  >
+                    {item.tipo}
+                  </Text>
+                  <Text style={styles.protocolo}>
+                    {item.protocolo}
+                  </Text>
+                </View>
+              </View>
+            );
+          })
+        )}
       </ScrollView>
     </View>
   );
@@ -128,7 +146,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   headerHome: {
-    backgroundColor: '#20B77A',
+    backgroundColor: VERDE,
     paddingTop: 50,
     paddingBottom: 25,
     paddingHorizontal: 25,
@@ -169,7 +187,7 @@ const styles = StyleSheet.create({
     color: '#111111',
   },
   botaoNova: {
-    backgroundColor: '#20B77A',
+    backgroundColor: VERDE,
     paddingHorizontal: 12,
     paddingVertical: 12,
     borderRadius: 16,
@@ -218,46 +236,38 @@ const styles = StyleSheet.create({
     color: '#60708A',
     fontSize: 12,
   },
-  statusAndamento: {
-    backgroundColor: '#F0E1FF',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 15,
-  },
-  statusAndamentoTexto: {
-    color: '#7329C9',
-    fontSize: 12,
-  },
-  statusRecebida: {
-    backgroundColor: '#DCE8FF',
+  statusBase: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 15,
   },
-  statusRecebidaTexto: {
-    color: '#3867D6',
+  statusBaseTexto: {
     fontSize: 12,
   },
-  statusConcluida: {
-    backgroundColor: '#DDF8E8',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-  },
-  statusConcluidaTexto: {
-    color: '#16834B',
-    fontSize: 12,
-  },
-  tipoReclamacao: {
-    color: '#FF3B30',
+  tipoTexto: {
     fontSize: 13,
   },
-  tipoSugestao: {
-    color: '#315BFF',
-    fontSize: 13,
+  // Estado vazio
+  vazioContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 20,
   },
-  tipoElogio: {
-    color: '#00A651',
-    fontSize: 13,
+  vazioIcone: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  vazioTitulo: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#111111',
+    marginBottom: 8,
+  },
+  vazioTexto: {
+    fontSize: 14,
+    color: '#60708A',
+    textAlign: 'center',
+    lineHeight: 21,
   },
 });
